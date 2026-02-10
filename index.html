@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Will You Be My Valentine 💘</title>
+
+<style>
+:root{
+  --bg1:#3b0f1b;
+  --bg2:#6a1a2e;
+  --card: rgba(255,255,255,.14);
+  --pink:#ff4d6d;
+  --hot:#ff1f5a;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,77,109,.35), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(255,120,160,.25), transparent 40%),
+    linear-gradient(145deg,var(--bg1),var(--bg2));
+  overflow:hidden;
+  color:white;
+}
+
+/* Fireworks background */
+#fx{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .4s ease;
+}
+#fx.on{opacity:1}
+
+/* Card */
+.card{
+  position:relative;
+  z-index:1;
+  width:min(820px,94vw);
+  padding:28px 24px 22px;
+  border-radius:28px;
+  background:var(--card);
+  backdrop-filter: blur(14px);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 20px 70px rgba(0,0,0,.4);
+  text-align:center;
+}
+
+h1{
+  margin:0 0 8px;
+  font-size:clamp(28px,4.4vw,48px);
+  letter-spacing:-.03em;
+}
+
+.subtitle{
+  opacity:.85;
+  font-size:clamp(14px,1.8vw,18px);
+  margin-bottom:14px;
+}
+
+/* Big question */
+.question{
+  margin:14px auto 18px;
+  font-family:"Snell Roundhand","Apple Chancery","Brush Script MT","Segoe Script",cursive;
+  font-size:clamp(34px,4.8vw,64px);
+  line-height:1.05;
+  color:transparent;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.9) 0 2px, transparent 3px) 0 0/14px 14px,
+    radial-gradient(circle, rgba(255,77,109,.9) 0 2px, transparent 3px) 7px 7px/14px 14px,
+    linear-gradient(180deg,#ff6b86,#ff1f5a);
+  -webkit-background-clip:text;
+  background-clip:text;
+  text-shadow:
+    0 14px 40px rgba(0,0,0,.4),
+    0 0 20px rgba(255,77,109,.35);
+  user-select:none;
+}
+
+/* Buttons */
+.btnRow{
+  position:relative;
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  min-height:72px;
+  margin-top:8px;
+}
+
+button{
+  border:0;
+  border-radius:18px;
+  padding:14px 22px;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 14px 30px rgba(0,0,0,.35);
+}
+
+#yesBtn{
+  background:linear-gradient(180deg,#ff5f7e,#ff1f5a);
+  color:white;
+}
+
+#noBtn{
+  background:rgba(255,255,255,.18);
+  color:white;
+  border:1px solid rgba(255,255,255,.2);
+  position:relative;
+}
+
+/* When dodging */
+.dodging #noBtn{
+  position:absolute;
+}
+
+.result{
+  margin-top:12px;
+  font-size:18px;
+  font-weight:900;
+}
+</style>
+</head>
+
+<body>
+<canvas id="fx"></canvas>
+
+<div class="card">
+  <h1>Partition Love Story 💘</h1>
+  <div class="subtitle">
+    Two hearts. Two backgrounds. One very serious question.
+  </div>
+
+  <div class="question">Will you be my Valentine?</div>
+
+  <div class="btnRow" id="btnRow">
+    <button id="yesBtn">YES, obviously 💗</button>
+    <button id="noBtn">No 😤</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+const btnRow = document.getElementById("btnRow");
+const noBtn = document.getElementById("noBtn");
+const yesBtn = document.getElementById("yesBtn");
+const result = document.getElementById("result");
+const fx = document.getElementById("fx");
+const ctx = fx.getContext("2d");
+
+let dodging=false, celebrating=false, particles=[];
+
+function resize(){
+  fx.width=innerWidth*devicePixelRatio;
+  fx.height=innerHeight*devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+resize(); addEventListener("resize",resize);
+
+function rand(a,b){return Math.random()*(b-a)+a}
+
+function moveNo(){
+  const r=btnRow.getBoundingClientRect(), b=noBtn.getBoundingClientRect();
+  noBtn.style.left=rand(0,r.width-b.width)+"px";
+  noBtn.style.top=rand(0,r.height-b.height)+"px";
+}
+
+btnRow.addEventListener("mousemove",e=>{
+  if(celebrating) return;
+  const r=noBtn.getBoundingClientRect();
+  if(Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2))<120){
+    dodging=true;
+    btnRow.classList.add("dodging");
+    moveNo();
+  }
+});
+
+noBtn.addEventListener("click",e=>{
+  e.preventDefault();
+  dodging=true;
+  btnRow.classList.add("dodging");
+  moveNo();
+});
+
+function burst(x,y){
+  for(let i=0;i<60;i++){
+    const a=rand(0,Math.PI*2),s=rand(2,6);
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:80});
+  }
+}
+
+function step(){
+  ctx.fillStyle="rgba(0,0,0,.18)";
+  ctx.fillRect(0,0,innerWidth,innerHeight);
+  particles=particles.filter(p=>p.l-- >0);
+  for(const p of particles){
+    p.vy+=.04; p.x+=p.vx; p.y+=p.vy;
+    ctx.fillStyle="hsla("+rand(330,360)+",95%,70%,"+(p.l/80)+")";
+    ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fill();
+  }
+  if(celebrating && Math.random()<.2) burst(rand(80,innerWidth-80),rand(80,innerHeight*.6));
+  requestAnimationFrame(step);
+}
+
+yesBtn.onclick=()=>{
+  celebrating=true;
+  result.textContent="She said YES 💖";
+  noBtn.disabled=yesBtn.disabled=true;
+  fx.classList.add("on");
+  burst(innerWidth/2,innerHeight/3);
+  step();
+};
+</script>
+</body>
+</html>
+EOF
